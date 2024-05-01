@@ -25,6 +25,8 @@
         const segmenter = await bodySegmentation.createSegmenter(model, segmenterConfig);
         const image = document.getElementById("people");
         const people = await segmenter.segmentPeople(image);
+        
+        Console.log(people);
     </script>
 	<script src="index.js"></script>
   </body>
