@@ -10,24 +10,18 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-segmentation"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.1/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.1/addons/p5.sound.min.js"></script>
+  <script src="https://unpkg.com/ml5@0.5.0/dist/ml5.min.js"></script>
   </head>
   <body>
     <main>
-        <h1>Welcome to My Website</h1> 
-        <img crossorigin='anonymous' src="people.jpg" id="people" alt="people" > 
+        <canvas id="myCanvas" style="width: 240; height: 180;"></canvas>
+        <video id="videoElement" style="width: 240; height: 180;"></video>
+    </container>
     </main>
-    <script type="module">
-        const model = bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation;
-        const segmenterConfig = {
-            runtime: 'tfjs',
-            modelType: 'general'
-        };
-        const segmenter = await bodySegmentation.createSegmenter(model, segmenterConfig);
-        const image = document.getElementById("people");
-        const people = await segmenter.segmentPeople(image);
-        
-        Console.log(people);
-    </script>
+    <script type="module" src="model.js"></script>
 	<script src="index.js"></script>
   </body>
 </html>
