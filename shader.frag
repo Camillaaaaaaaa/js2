@@ -8,19 +8,19 @@ uniform vec2 resolution;
 uniform sampler2D tex0;
 uniform vec2 texSize;
 
-uniform float colorM[48];
+uniform float colorM[108];
 
 float get_matrix_pos(vec2 pos){
-  int x_index= int(pos.x*8.);
-  int y_index= int(pos.y*6.);
+  int x_index= int(pos.x*12.);
+  int y_index= int(pos.y*9.);
 
   float col_index = 0.;
   
   // get number in matrix
-  for( int i = 0; i<8; i++){
-    for(int j = 0; j<6; j++){
+  for( int i = 0; i<12; i++){
+    for(int j = 0; j<9; j++){
       if (x_index== i && y_index==j)
-        col_index = colorM[i+8*j];
+        col_index = colorM[i+12*j];
     }
   }
   
@@ -144,8 +144,10 @@ void main() {
   float col_index= get_matrix_pos(newPos);
   
   vec3 finalC=col;
-    
-  if (col_index<=1.)
+   
+  if (col_index==0.)
+    finalC= mix(col,vec3(1.), 0.3);
+  else if (col_index<=1.)
     finalC= mix(col,get_protanopia(col), col_index);
   else if (col_index<=2.)
     finalC= mix(col,get_deuteranopia(col), col_index-1.);

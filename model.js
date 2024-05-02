@@ -9,7 +9,6 @@ const segmenter = await bodySegmentation.createSegmenter(model, segmenterConfig)
 // get camera image 
 // https://medium.com/@arpit23sh/capturing-webcam-images-using-html-and-javascript-9b8896ef1705 
 let videoElement = document.getElementById('videoElement');
-const image = document.getElementById("people");
 
 let stream;
 async function startWebcam() {
@@ -29,7 +28,6 @@ async function startWebcam() {
         });
         videoElement.play();
         analyseImage(videoElement);
-        //console.log(videoElement.width);
         
     } catch (error) {
         console.error('Error accessing webcam:', error);
@@ -66,7 +64,7 @@ async function analyseImage(image) {
     const opacity = 1;
     const flipHorizontal = false;
     const maskBlurAmount = 0;
-    const pixelCellWidth = 30.0;
+    const pixelCellWidth = 20.0;
     const canvas = document.getElementById('myCanvas');
     // Draw the pixelated colored part image on top of the original image onto a
     // canvas.  Each pixel cell's width will be set to 10 px. The pixelated colored
@@ -77,19 +75,45 @@ async function analyseImage(image) {
         flipHorizontal, pixelCellWidth);
         
     var ctx=canvas.getContext("2d");
-    //canvas.style.display = "none";
-    //var canvasColor = ctx.getImageData(100, 100, 1, 1);
-    //console.log(Math.floor(canvasColor.data[3]/255));
+    canvas.style.display = "none";
+    videoElement.style.display = "none";
 
     for(let x=0; x<canvas.width/pixelCellWidth;x++){
         for(let y=0; y<canvas.height/pixelCellWidth;y++){
             let pixel_val=ctx.getImageData(x*pixelCellWidth, y*pixelCellWidth, 1, 1).data[3]/255;
             pixel_val= (1-Math.floor(pixel_val));
-            myp5.tile_p[y][x]=pixel_val;
+            myp5.tile_p[y][canvas.width/pixelCellWidth-1-x]=pixel_val;
         }
     }
     analyseImage(videoElement);
 }
+
+async function object_detection(img){
+    //const img = document.getElementById("linz");
+    //img.style.display="none";
+    img.width = screen.width;
+    img.height = screen.height;
+
+    //https://github.com/tensorflow/tfjs-models/tree/master/coco-ssd
+    //object detection
+    // Load the model.
+    cocoSsd.load().then(model => {
+        // detect objects in the image.
+        model.detect(img).then(predictions => {
+        console.log('Predictions: ', predictions);
+
+        //console.log(predictions[0].bbox[0]);
+        //mirror
+        console.log(img.width);
+        for (let i = 0; i < predictions.length; i++) {
+            //predictions[i].bbox[0]= img.width-predictions[i].bbox[0]-predictions[i].bbox[2];
+            //predictions[i].bbox[1]= img.height-predictions[i].bbox[1]-predictions[i].bbox[3];
+        }
+        myp5.detections=predictions;
+        });
+    });
+}
+
 
 
 
@@ -97,10 +121,13 @@ const s = function(p) {
     p.tile_p=[];
     p.tile_size=10;
     p.tileShader;
-    p.capture=p.loadImage('linz.png');
+    p.video=p.createVideo('linz.mp4');
 
-    p.tiles_dim = [8,6];
-    p.dimension= [640,480];
+    p.video.loop();
+    p.capture = p.video.get();
+
+    p.tiles_dim = [12,9];
+    p.dimension= [1080,720];
     p.color_per_tile=[];
     p.silhouette=[];
 
@@ -110,27 +137,7 @@ const s = function(p) {
 
     p.preload= function(){
         p.tileShader = p.loadShader('shader.vert', 'shader.frag');
-
-        p.detector = ml5.objectDetector('cocossd', p.model_loaded);
     }
-
-    p.model_loaded= function(){
-        console.log("model loaded");
-    }
-
-    p.gotDetections = function(error, results) {
-        if (error) {
-          console.error(error);
-        }
-        p.detections = results;
-        
-        //mirror
-        for (let i = 0; i < p.detections.length; i++) {
-          p.detections[i].x= p.width-p.detections[i].x-p.detections[i].width;
-        }
-        
-        //detector.detect(capture, gotDetections);
-      }
 
 
 //-----------------------------------------------------------
@@ -140,36 +147,31 @@ const s = function(p) {
     p.setup = function() {
         p.createCanvas(p.dimension[0],p.dimension[1]);
         p.offscreenCanvas = p.createGraphics(p.dimension[0],p.dimension[1],p.WEBGL);
-        for(let x = 0; x<p.tiles_dim[0];x++){
+        for(let x = 0; x<p.tiles_dim[1];x++){
             p.append(p.tile_p,[]);
             p.append(p.silhouette,[]);
             p.append(p.color_per_tile,[]);
-            for(let y = 0; y<p.tiles_dim[1];y++){
+            for(let y = 0; y<p.tiles_dim[0];y++){
                 p.append(p.tile_p[x],0);
                 p.append(p.silhouette[x],0);
-                p.append(p.color_per_tile[x],p.float(p.int(p.random(8))));
+                p.append(p.color_per_tile[x],p.float(p.int(1+p.random(7))));
             }
         }
-
-        p.detector.detect(p.capture, p.gotDetections);
 
     };
   
     p.draw = function() {
-        if (p.frameCount%10){
-            p.detector.detect(p.capture, p.gotDetections);
-        }
-
+        p.capture = p.video.get();
 
         p.offscreenCanvas.shader(p.tileShader);
         p.tileShader.setUniform('tex0', p.capture);
 
-        for(let x = 0; x<p.tiles_dim[0];x++){
-            for(let y = 0; y<p.tiles_dim[1];y++){
-                if(p.tile_p[y][x]==1){
-                    p.silhouette[y][x]=p.color_per_tile[y][x];
+        for(let x = 0; x<p.tiles_dim[1];x++){
+            for(let y = 0; y<p.tiles_dim[0];y++){
+                if(p.tile_p[x][y]){
+                    p.silhouette[x][y]=p.color_per_tile[x][y];
                 }else{
-                    p.silhouette[y][x]=0;
+                    p.silhouette[x][y]=0;
                 }
             }
         }
@@ -178,9 +180,16 @@ const s = function(p) {
         p.tileShader.setUniform('texSize', [p.capture.width,p.capture.width]);
         p.offscreenCanvas.rect(0,0,p.width, p.height);
 
-        p.image(p.offscreenCanvas, 0, 0);
 
-        //draw_outline();
+        p.push();
+        p.translate(p.width, 0);
+        p.scale(-1, 1);
+        p.image(p.offscreenCanvas, 0, 0);
+        p.pop();
+
+        p.stroke(0);
+        p.strokeWeight(1);
+
         for(let i=1;i<p.tiles_dim[0];i++){
             p.line(p.width/p.tiles_dim[0]*i,0,p.width/p.tiles_dim[0]*i,p.height);
         }
@@ -190,6 +199,7 @@ const s = function(p) {
         }
 
         p.label_tiles(p.tiles_dim);
+        //p.draw_outline();
     };
 
     //check if rectancles overlap
@@ -208,20 +218,53 @@ const s = function(p) {
           for(let y = 0; y<tiles_dim[1];y++){
             if (p.silhouette[y][x]==7.){
               for (let i = 0; i < p.detections.length; i++) {
-                tile= [width/tiles_dim[0]*x, height/tiles_dim[1]*y, width/tiles_dim[0]*(x+1),height/tiles_dim[1]*(y+1)];
-      
-                detected= [p.detections[i].x, p.detections[i].y, p.detections[i].x+p.detections[i].width, p.detections[i].y+p.detections[i].height];
-      
+                let tile= [p.width/tiles_dim[0]*x, p.height/tiles_dim[1]*y, p.width/tiles_dim[0]*(x+1),p.height/tiles_dim[1]*(y+1)];
+            
+                let detected= [p.detections[i].bbox[0], p.detections[i].bbox[1], p.detections[i].bbox[0]+p.detections[i].bbox[2], p.detections[i].bbox[1]+p.detections[i].bbox[3]];
+
                 if (p.check_rect_overlap(tile,detected)){
-                  p.fill(255);
-                  p.textSize(13);
-                  p.text(p.round(p.detections[i].confidence,3)+ "% " + p.detections[i].label,tile[0]+5, tile[1]+13*(i+1));
+                    p.fill(255);
+                    p.textSize(13);
+                    p.noStroke();
+                    p.text(p.round(p.detections[i].score,3)+ "% " + p.detections[i].class,tile[0]+5, tile[1]+13*(i+1));
+                }else{
+                    p.fill(255);
+                    p.textSize(13);
+                    p.noStroke();
+                    p.text("no object found",tile[0]+5, tile[1]+13*(i+1));
+
                 }
               }
             }
           }
         }
       }
+
+     p.draw_outline= function (){
+        for (let i = 0; i < p.detections.length; i++) {
+          //let object = p.detections[i];
+          //print(object.label);
+          p.stroke(0, 255, 0);
+          p.strokeWeight(4);
+          p.noFill();
+          p.rect(p.detections[i].bbox[0], p.detections[i].bbox[1], p.detections[i].bbox[2], p.detections[i].bbox[3]);
+          p.noStroke();
+          p.fill(255);
+          p.textSize(24);
+          //p.text(object.label, object.x + 10, object.y + 24);
+        }
+      }
+
+      p.mousePressed= function () {
+        if (p.mouseX > 0 && p.mouseX < p.width && p.mouseY > 0 && p.mouseY < p.height) {
+          let fs = p.fullscreen();
+          p.fullscreen(!fs);
+        }
+    }
   };
   
  var myp5 =  new p5(s); // invoke p5
+ 
+myp5.dimension[0]=screen.width;
+myp5.dimension[1]=screen.height;
+object_detection(myp5.capture);

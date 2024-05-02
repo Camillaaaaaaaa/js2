@@ -6,10 +6,14 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>My Website</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="#">
     
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-segmentation"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+
+    <!-- Load the coco-ssd model. -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"> </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.1/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.1/addons/p5.sound.min.js"></script>
@@ -17,6 +21,7 @@
   </head>
   <body>
     <main>
+        <video id="videoLinz" style="width: 240; height: 180; display:none;" autoplay controls loop><source src="linz.mp4" type="video/mp4"></video>
         <canvas id="myCanvas" style="width: 240; height: 180;"></canvas>
         <video id="videoElement" style="width: 240; height: 180;"></video>
     </container>

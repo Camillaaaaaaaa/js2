@@ -1,0 +1,16 @@
+body{
+    margin:0px;
+    /*overflow: hidden;*/ /* Hide scrollbars */
+}
+
+.videoelement{
+    display: none;
+}
+
+.myCanvas{
+    display: none;
+}
+
+.linz{
+    display: none;
+}
