@@ -121,6 +121,8 @@ const s = function(p) {
     p.tile_p=[];
     p.tile_size=10;
     p.tileShader;
+
+    //https://editor.p5js.org/Jaesar/sketches/TGyEC6OYB
     p.video=p.createVideo('linz.mp4');
 
     p.video.loop();
@@ -267,4 +269,4 @@ const s = function(p) {
  
 myp5.dimension[0]=screen.width;
 myp5.dimension[1]=screen.height;
-object_detection(myp5.capture);
+//object_detection(myp5.capture);
